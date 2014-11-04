@@ -35,25 +35,35 @@ var margin = {top: 20, right: 20, bottom: 30, left: 40},
 
 // setup x 
 var xValue = function(d) { return d[0];}, // data -> value
-    xScale = d3.scale.linear().range([0, width]), // value -> display
-    xMap = function(d) { return xScale(xValue(d));}, // data -> display
-    xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+    xScale1 = d3.scale.linear().range([0, width]), // value -> display
+    xScale2 = d3.scale.linear().range([0, width]), // value -> display
+    xMap1 = function(d) { return xScale1(xValue(d));}, // data -> display
+    xMap2 = function(d) { return xScale2(xValue(d));}, // data -> display
+    xAxis1 = d3.svg.axis().scale(xScale1).orient("bottom");
+    xAxis2 = d3.svg.axis().scale(xScale2).orient("bottom");
 
 // setup y
 var yValue = function(d) { return d[1];}, // data -> value
-    yScale = d3.scale.linear().range([height, 0]), // value -> display
-    yMap = function(d) { return yScale(yValue(d));}, // data -> display
-    yAxis = d3.svg.axis().scale(yScale).orient("left");
+    yScale1 = d3.scale.linear().range([height, 0]), // value -> display
+    yScale2 = d3.scale.linear().range([height, 0]), // value -> display
+    yMap1 = function(d) { return yScale1(yValue(d));}, // data -> display
+    yMap2 = function(d) { return yScale2(yValue(d));}, // data -> display
+    yAxis1 = d3.svg.axis().scale(yScale1).orient("left");
+    yAxis2 = d3.svg.axis().scale(yScale2).orient("left");
 
-// setup fill color
+/* // setup fill color
 var cValue = function(d) { return d[1];},
     color = d3.scale.category10();
-    /*color = d3.scale.linear()
-    .domain([0,3000])
-    .range(["white","black"]);*/
+*/
 
 // add the graph canvas to the body of the webpage
-var svg = d3.select("body").append("svg")
+var svg1 = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var svg2 = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
@@ -65,59 +75,55 @@ var tooltip = d3.select("body").append("div")
     .style("opacity", 0);
 
 // load data
-d3.text("/static/data/" + QueryString.fileName, "text/csv", function(text) {
+d3.text("/static/data/" + QueryString.fileName1, "text/csv", function(text) {
    var data = d3.tsv.parseRows(text);
 
   // change string (from TSV) into number format
-  var sum = 0;
   data.forEach(function(d) {
     d[0] = +d[0];
     d[0] = Math.log10(d[0]);
     d[1] = +d[1];
-    sum = sum + d[1];
-    
     d[1] = Math.log10(d[1]);
     // console.log(d);
   });
-  console.log(sum);
-
+  
   // don't want dots overlapping axis, so add in buffer to data domain
-  xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
-  yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+  xScale1.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+  yScale1.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
 
   // x-axis
-  svg.append("g")
+  svg1.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
-      .call(xAxis)
+      .call(xAxis1)
     .append("text")
       .attr("class", "label")
       .attr("x", width)
       .attr("y", -6)
       .style("text-anchor", "end")
-      .text(QueryString.xLabel);
+      .text(QueryString.xLabel1);
 
   // y-axis
-  svg.append("g")
+  svg1.append("g")
       .attr("class", "y axis")
-      .call(yAxis)
+      .call(yAxis1)
     .append("text")
       .attr("class", "label")
       .attr("transform", "rotate(-90)")
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
-      .text(QueryString.yLabel);
+      .text(QueryString.yLabel1);
 
   // draw dots
-  svg.selectAll(".dot")
+  svg1.selectAll(".dot")
       .data(data)
     .enter().append("circle")
       .attr("class", "dot")
       .attr("r", 3.5)
-      .attr("cx", xMap)
-      .attr("cy", yMap)
-      .style("fill", function(d) { return color(cValue(d));}) 
+      .attr("cx", xMap1)
+      .attr("cy", yMap1)
+      .style("fill", 'SteelBlue') 
       .on("mouseover", function(d) {
           tooltip.transition()
                .duration(200)
@@ -139,27 +145,15 @@ d3.text("/static/data/" + QueryString.fileName, "text/csv", function(text) {
         } else {
             req = new ActiveXObject("Microsoft.XMLHTTP");
         }
-        req.onreadystatechange = handleResponse;
-        req.open("GET", "../Update/?x="
+        req.onreadystatechange = handleResponse1;
+        req.open("GET", "../Update/?plot=1&x="
           + Math.round(Math.pow(10,xValue(d)))
           + "&y=" + Math.round(Math.pow(10,yValue(d))), true);
         req.send(); 
         
 
       });
-function handleResponse() {
-    console.log("enter handleResponse")
-    if (req.readyState != 4 || req.status != 200) {
-        return;
-    }
 
-    // Parses the Text response
-    var textData = req.responseText;
-    tooltip.html(textData)
-               .style("left", "0px")
-               .style("top", "0px");
-    
-}
 /*
   // draw legend
   var legend = svg.selectAll(".legend")
@@ -185,3 +179,144 @@ function handleResponse() {
 */      
 });
 
+function handleResponse1() {
+    console.log("enter handleResponse1")
+    if (req.readyState != 4 || req.status != 200) {
+        return;
+    }
+
+    // restore the original plot color
+    svg2.selectAll("circle")
+    .style("fill",'SteelBlue');
+
+    // Parses the Text response
+    var textData = req.responseText;
+    if (textData.length > 0) {
+      textData = textData.substring(0,textData.length - 1);
+    }
+    var res = textData.split(";");
+    console.log("corresponding nodes num: " + res.length);
+    res.forEach(function(d) {
+      // console.log(d);
+      d = d.split("\t");
+      d[0] = +d[0];
+      d[0] = Math.log10(d[0]);
+      d[1] = +d[1];
+      d[1] = Math.log10(d[1]);
+      // update dots
+      var dots2Update = svg2.select("circle[cx='" + xMap2(d) + "'][cy='" + yMap2(d) + "']");
+      dots2Update.style("fill", 'red');
+      // console.log(d);
+    });
+    
+}
+
+d3.text("/static/data/" + QueryString.fileName2, "text/csv", function(text) {
+   var data = d3.tsv.parseRows(text);
+
+  // change string (from TSV) into number format
+  data.forEach(function(d) {
+    d[0] = +d[0];
+    d[0] = Math.log10(d[0]);
+    d[1] = +d[1];
+    d[1] = Math.log10(d[1]);
+    // console.log(d);
+  });
+  
+  // don't want dots overlapping axis, so add in buffer to data domain
+  xScale2.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+  yScale2.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+
+  // x-axis
+  svg2.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis2)
+    .append("text")
+      .attr("class", "label")
+      .attr("x", width)
+      .attr("y", -6)
+      .style("text-anchor", "end")
+      .text(QueryString.xLabel2);
+
+  // y-axis
+  svg2.append("g")
+      .attr("class", "y axis")
+      .call(yAxis2)
+    .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text(QueryString.yLabel2);
+
+  // draw dots
+  svg2.selectAll(".dot")
+      .data(data)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", 3.5)
+      .attr("cx", xMap2)
+      .attr("cy", yMap2)
+      .style("fill", 'SteelBlue') 
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity", .9);
+          tooltip.html("(" + Math.round(Math.pow(10,xValue(d))) 
+           + ", " + Math.round(Math.pow(10,yValue(d))) + ")")
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      })
+      .on("click", function(d){
+        console.log('enter click');
+        if (window.XMLHttpRequest) {
+            req = new XMLHttpRequest();
+        } else {
+            req = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        req.onreadystatechange = handleResponse2;
+        req.open("GET", "../Update/?plot=2&x="
+          + Math.round(Math.pow(10,xValue(d)))
+          + "&y=" + Math.round(Math.pow(10,yValue(d))), true);
+        req.send(); 
+        
+
+      });    
+});
+
+function handleResponse2() {
+    console.log("enter handleResponse2")
+    if (req.readyState != 4 || req.status != 200) {
+        return;
+    }
+    // restore the original plot color
+    svg1.selectAll("circle")
+    .style("fill",'SteelBlue');
+
+    // Parses the Text response
+    var textData = req.responseText;
+    if (textData.length > 0) {
+      textData = textData.substring(0,textData.length - 1);
+    }
+    var res = textData.split(";");
+    console.log("corresponding nodes num: " + res.length);
+    res.forEach(function(d) {
+      // console.log(d);
+      d = d.split("\t");
+      d[0] = +d[0];
+      d[0] = Math.log10(d[0]);
+      d[1] = +d[1];
+      d[1] = Math.log10(d[1]);
+      // update dots
+      var dots2Update = svg1.select("circle[cx='" + xMap1(d) + "'][cy='" + yMap1(d) + "']");
+      dots2Update.style("fill", 'red');
+      // console.log(d);
+    });
+}
