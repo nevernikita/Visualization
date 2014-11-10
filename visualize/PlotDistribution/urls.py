@@ -4,4 +4,6 @@ urlpatterns = patterns('',
     url(r'^home$', 'PlotDistribution.views.home'),
     url(r'^Plot', 'PlotDistribution.views.Plot'),
     url(r'^Update', 'PlotDistribution.views.Update'),
+    url(r'^Egonet', 'PlotDistribution.views.Egonet'),
+    url(r'^GetEgonet','PlotDistribution.views.GetEgonet'),
 )

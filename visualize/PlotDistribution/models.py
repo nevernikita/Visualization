@@ -10,8 +10,8 @@ class OutdegreeCount(models.Model):
 	count = models.IntegerField(default= 0)
 	
 class Edge(models.Model):
-	fromNode = models.IntegerField(default= 0)
-	toNode = models.IntegerField(default= 0)
+	fromNode = models.IntegerField(default= 0, db_index=True)
+	toNode = models.IntegerField(default= 0, db_index=True)
 
 class NodeIndegree(models.Model):
 	node = models.IntegerField(default= 0)
