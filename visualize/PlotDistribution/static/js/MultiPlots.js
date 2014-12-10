@@ -50,6 +50,16 @@ var svg_egonet = d3.select("#egonet").append("svg")
     .attr("height", height_egonet)
     .attr("id", "svg_egonet");
 
+// add show anomaly button
+var showADiv = document.getElementById("showAnomaly");
+var newB = document.createElement('button');
+newB.onclick = function() {
+  clickShowAnomaly();
+}
+newB.type = "button";
+newB.innerHTML = "Show Anomaly";
+showADiv.appendChild(newB);
+
 console.log('script ends');
 
 function drawPlot(divId, fileName, xLog, yLog, heatMap, xLabelName, yLabelName){
@@ -240,6 +250,27 @@ function handleResponse() {
  
 }
 
+function clickShowAnomaly() {
+  console.log('enter clickShowAnomaly');
+  // restore the original plot color
+  for (dotId in prevClickDotsSet) {
+    var dot = prevClickDotsSet[dotId];
+    dot.style("fill", dot.attr('origColor'));
+  }
+  prevClickDotsSet = {};
+  d3.text("/static/data/" + "GFADD_degreePageRank_g8", "text/csv", function(text) {
+      var data = d3.tsv.parseRows(text);
+      console.log("corresponding dots num: " + data.length);
+      data.forEach(function(d) {
+        // console.log(d);
+        var origData = d[1].replace('.', '_')+'t'+d[2].replace('.', '_');
+        var dot2Update = svgMap['degreePagerank'].select("#circle_" + origData);
+        dot2Update.style("fill", 'red');
+        prevClickDotsSet[dot2Update.attr('id')] = dot2Update;
+      });
+  });
+}
+
 function click2ShowEgonet(nodeid) {
   console.log('Egonet node ID: ' + nodeid);
   if (window.XMLHttpRequest) {
@@ -303,7 +334,7 @@ function showEgonet(links) {
   for (d in prevLinks) {
     prevLinksArray.push(prevLinks[d]);
   }
-  
+
   var force = d3.layout.force()
   .nodes(d3.values(nodes))
   .links(prevLinksArray)
