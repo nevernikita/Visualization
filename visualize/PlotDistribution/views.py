@@ -10,6 +10,7 @@ from PlotDistribution.models import *
 from sets import Set
 import time
 import random
+import json
 
 # Create your views here.
 
@@ -18,6 +19,15 @@ def home(request):
 
 def Plot(request):
 	return render(request, "PlotDistribution/Plot.html", {})
+
+def DBPlot(request):
+	return render(request, "PlotDistribution/DBPlot.html", {})
+
+def MultiPlots(request):
+	return render(request, "PlotDistribution/MultiPlots.html", {})
+
+def Heatmap(request):
+	return render(request, "PlotDistribution/Heatmap.html", {})
 
 def Egonet(request):
 	return render(request, "PlotDistribution/Egonet.html", {})
@@ -41,7 +51,9 @@ def GetEgonet(request):
 	sampleNum = 10;
 	if len(nodes) > sampleNum:
 		nodes = random.sample(nodes,sampleNum)
-	nodes.append(nodeid)
+		nodes.append(nodeid)
+	else:
+		nodes.add(nodeid)
 	validEdges = Edge.objects.filter(fromNode__in=nodes, toNode__in=nodes)
 	for e in validEdges:
 		resultStr = resultStr + str(e.fromNode) + "\t" + str(e.toNode)+ "\n"
@@ -55,6 +67,20 @@ def GetEgonet(request):
 	# 			print ""
 	print len(resultStr)
 	print("--- %s seconds ---" % str(time.time() - start_time))
+	return HttpResponse(resultStr, content_type="text/plain")
+
+def GetPlotData(request):
+	dataCount = {}
+	nodes = Node.objects.all()
+	for node in nodes:
+		key = str(node.inoutdegree)+'\t'+str(node.pagerank)
+		if key in dataCount:
+			dataCount[key] = dataCount[key] + 1
+		else:
+			dataCount[key] = 1
+	resultStr = ""
+	for key in dataCount:
+		resultStr = resultStr + key + "\t" + str(dataCount[key])+ "\n"
 	return HttpResponse(resultStr, content_type="text/plain")
 
 def Update(request):
@@ -98,3 +124,108 @@ def Update(request):
 	print resultStr		
 	return HttpResponse(resultStr, content_type="text/plain")
 
+
+def ClickPlot(request):
+	plot = request.GET.get('plot',0)
+	x = request.GET.get('x',0)
+	y = request.GET.get('y',0)
+	print plot, x, y
+
+	response_data = {}
+	response_data['degreeCount'] = ''
+	response_data['degreePagerank'] = ''
+	response_data['radiusCount'] = ''
+	response_data['degreeRadius'] = ''
+	response_data['ev1ev2'] = ''
+	response_data['ev2ev3'] = ''
+
+	response_data['sampleNodes'] = []
+
+	degreeCountSet = Set([])
+	degreePagerankSet = Set([])
+	radiusCountSet = Set([])
+	degreeRadiusSet = Set([])
+
+	if plot == "degreeCount":
+		print "click on plot degreeCount"
+		degree = int(x)
+		nodes = Node.objects.filter(inoutdegree = degree)
+		response_data['degreeCount'] = x + '\t' + y + ';'
+	elif plot == "degreePagerank":
+		print "click on plot degreePagerank"
+		degree = int(x)
+		pagerank = y
+		nodes = Node.objects.filter(inoutdegree = degree, pagerank = pagerank)
+		response_data['degreePagerank'] = x + '\t' + y + ';'
+	elif plot == "radiusCount":
+		print "click on plot radiusCount"
+		radius = x
+		nodes = Node.objects.filter(radius = radius)
+		response_data['radiusCount'] = x + '\t' + y + ';'
+	elif plot == "degreeRadius":
+		print "click on plot degreeRadius"
+		degree = int(x)
+		radius = y
+		nodes = Node.objects.filter(inoutdegree = degree, radius = radius)
+		response_data['degreeRadius'] = x + '\t' + y + ';'
+	elif plot == "ev1ev2":
+		print "click on plot ev1ev2"
+		ev1 = x
+		ev2 = y
+		nodes = Node.objects.filter(ev1 = ev1, ev2 = ev2)
+		response_data['ev1ev2'] = x + '\t' + y + ';'
+	elif plot == "ev2ev3":
+		print "click on plot ev2ev3"
+		ev2 = x
+		ev3 = y
+		nodes = Node.objects.filter(ev2 = ev2, ev3 = ev3)
+		response_data['ev2ev3'] = x + '\t' + y + ';'
+	
+	print len(nodes)
+	i = 0
+	for n in nodes:
+		if i < 10:
+			nodeInfo = {}
+			print n.nodeId, n.inoutdegree, n.pagerank, n.radius, n.ev1, n.ev2, n.ev3
+			nodeInfo['nodeId'] = n.nodeId
+			nodeInfo['inoutdegree'] = n.inoutdegree
+			nodeInfo['pagerank'] = n.pagerank
+			nodeInfo['radius'] = n.radius
+			nodeInfo['ev1'] = n.ev1
+			nodeInfo['ev2'] = n.ev2
+			nodeInfo['ev3'] = n.ev3
+			response_data['sampleNodes'].append(nodeInfo)
+			i = i + 1
+		if plot != "degreeCount":
+			degreeCount = str(n.inoutdegree) + '\t' + str(InoutdegreeCount.objects.get(inoutdegree=n.inoutdegree).count)
+			if degreeCount not in degreeCountSet:
+				degreeCountSet.add(degreeCount)
+		if plot != "degreePagerank":
+			degreePagerank = str(n.inoutdegree) + '\t' + n.pagerank
+			if degreePagerank not in degreePagerankSet:
+				degreePagerankSet.add(degreePagerank)
+		if plot != "radiusCount":
+			radiusCount = n.radius + '\t' + str(RadiusCount.objects.get(radius=n.radius).count)
+			if radiusCount not in radiusCountSet:
+				radiusCountSet.add(radiusCount)
+		if plot != "degreeRadius":
+			degreeRadius = str(n.inoutdegree) + '\t' + n.radius
+			if degreeRadius not in degreeRadiusSet:
+				degreeRadiusSet.add(degreeRadius)
+		if plot != "ev1ev2":
+			response_data['ev1ev2'] = response_data['ev1ev2'] + n.ev1 + '\t' + n.ev2 + ';'
+		if plot != "ev2ev3":
+			response_data['ev2ev3'] = response_data['ev2ev3'] + n.ev2 + '\t' + n.ev3 + ';'
+
+	for degreeCount in degreeCountSet:
+		response_data['degreeCount'] = response_data['degreeCount'] + degreeCount + ';'
+	for degreePagerank in degreePagerankSet:
+		response_data['degreePagerank'] = response_data['degreePagerank'] + degreePagerank + ';'
+	for radiusCount in radiusCountSet:
+		response_data['radiusCount'] = response_data['radiusCount'] + radiusCount + ';'
+	for degreeRadius in degreeRadiusSet:
+		response_data['degreeRadius'] = response_data['degreeRadius'] + degreeRadius + ';'
+
+	return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+	

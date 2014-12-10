@@ -223,6 +223,7 @@ d3.text("/static/data/" + QueryString.fileName2, "text/csv", function(text) {
     // console.log(d);
   });
   
+
   // don't want dots overlapping axis, so add in buffer to data domain
   xScale2.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
   yScale2.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
