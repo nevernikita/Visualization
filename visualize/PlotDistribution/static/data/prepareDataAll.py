@@ -1,8 +1,7 @@
 import sys
 import math
-print len(sys.argv)
-if len(sys.argv) != 7:
-	sys.exit("Usage: python combineDataAll.py nodeInoutdegreeFile nodePagerankFile nodeRadiusFile nodeEigenValue1File nodeEigenValue2File nodeEigenValue3File")
+if len(sys.argv) != 8:
+	sys.exit("Usage: python combineDataAll.py nodeInoutdegreeFile nodePagerankFile nodeRadiusFile nodeEigenValue1File nodeEigenValue2File nodeEigenValue3File dataFolderPath")
 mapIdDegree = {}
 mapDegreeCount = {}
 mapDegreePRCount = {}
@@ -20,8 +19,8 @@ with open(sys.argv[1]) as fIdDegree:
 			mapDegreeCount[degree] = 1
 
 i = 1
-with open('degreeCount','w') as fdegreeCount:
-	with open('degreeCount_forDB','w') as fdegreeCountDB:
+with open(sys.argv[7]+'degreeCount','w') as fdegreeCount:
+	with open(sys.argv[7]+'degreeCount_forDB','w') as fdegreeCountDB:
 		for degree in mapDegreeCount:
 			fdegreeCount.write(degree+'\t'+str(mapDegreeCount[degree])+'\n')
 			fdegreeCountDB.write(str(i)+'\t'+degree+'\t'+str(mapDegreeCount[degree])+'\n')
@@ -33,13 +32,13 @@ with open(sys.argv[2]) as fPR:
 		with open(sys.argv[4]) as fEV1:
 			with open(sys.argv[5]) as fEV2:
 				with open(sys.argv[6]) as fEV3:
-					with open('forDBNode','w') as fout:
-						with open('degreePagerank','w') as fdegreePR:
-							with open('ev1ev2','w') as fev1ev2:
-								with open('ev2ev3','w') as fev2ev3:
-									with open('degreeRadius','w') as fdegreeRadius:
-										with open('radiusCount','w') as fradiusCount:
-											with open('radiusCount_forDB','w') as fradiusCountDB:
+					with open(sys.argv[7]+'forDBNode','w') as fout:
+						with open(sys.argv[7]+'degreePagerank','w') as fdegreePR:
+							with open(sys.argv[7]+'ev1ev2','w') as fev1ev2:
+								with open(sys.argv[7]+'ev2ev3','w') as fev2ev3:
+									with open(sys.argv[7]+'degreeRadius','w') as fdegreeRadius:
+										with open(sys.argv[7]+'radiusCount','w') as fradiusCount:
+											with open(sys.argv[7]+'radiusCount_forDB','w') as fradiusCountDB:
 												linePR = fPR.readline()
 												while linePR:
 													attrs = linePR.split('\t')

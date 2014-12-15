@@ -98,6 +98,9 @@ function drawPlot(divId, fileName, xLog, yLog, heatMap, xLabelName, yLabelName){
           d[2] = +d[2];
         }
         origDataMap[d] = origData;
+        if(origData == '3t4_067200465915605E-6') {
+          console.log(origData);
+        }
       });
 
       if (heatMap) {
@@ -258,17 +261,30 @@ function clickShowAnomaly() {
     dot.style("fill", dot.attr('origColor'));
   }
   prevClickDotsSet = {};
-  d3.text("/static/data/" + "GFADD_degreePageRank_g8", "text/csv", function(text) {
-      var data = d3.tsv.parseRows(text);
-      console.log("corresponding dots num: " + data.length);
-      data.forEach(function(d) {
-        // console.log(d);
-        var origData = d[1].replace('.', '_')+'t'+d[2].replace('.', '_');
-        var dot2Update = svgMap['degreePagerank'].select("#circle_" + origData);
-        dot2Update.style("fill", 'red');
-        prevClickDotsSet[dot2Update.attr('id')] = dot2Update;
-      });
+  plotNames.forEach(function(pName){
+    d3.text("/static/data/" + pName + "_anomaly.txt", "text/csv", function(text) {
+        var data = d3.tsv.parseRows(text);
+        console.log("corresponding dots num: " + data.length);
+        data.forEach(function(d) {
+          // console.log(d);
+          var origData = d[0].replace('.', '_')+'t'+d[1].replace('.', '_');
+          var dot2Update = svgMap[pName].select("#circle_" + origData);
+          dot2Update.style("fill", 'red');
+          prevClickDotsSet[dot2Update.attr('id')] = dot2Update;
+        });
+    });
   });
+  // d3.text("/static/data/" + "GFADD_degreePageRank_g8", "text/csv", function(text) {
+  //     var data = d3.tsv.parseRows(text);
+  //     console.log("corresponding dots num: " + data.length);
+  //     data.forEach(function(d) {
+  //       // console.log(d);
+  //       var origData = d[1].replace('.', '_')+'t'+d[2].replace('.', '_');
+  //       var dot2Update = svgMap['degreePagerank'].select("#circle_" + origData);
+  //       dot2Update.style("fill", 'red');
+  //       prevClickDotsSet[dot2Update.attr('id')] = dot2Update;
+  //     });
+  // });
 }
 
 function click2ShowEgonet(nodeid) {
